@@ -84,6 +84,7 @@ public class ExampleScheduler implements Scheduler {
         // docker image info
         Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder = Protos.ContainerInfo.DockerInfo.newBuilder();
         dockerInfoBuilder.setImage(imageName);
+        dockerInfoBuilder.setNetwork(Protos.ContainerInfo.DockerInfo.Network.BRIDGE);
 
         // container info
         Protos.ContainerInfo.Builder containerInfoBuilder = Protos.ContainerInfo.newBuilder();
