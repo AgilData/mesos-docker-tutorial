@@ -121,8 +121,14 @@ public class ExampleScheduler implements Scheduler {
     logger.info("statusUpdate() task {} is in state {}",
         taskStatus.getTaskId().getValue(), taskStatus.getState());
 
-    if (taskStatus.getState() == Protos.TaskState.TASK_FINISHED) {
-      runningInstances.decrementAndGet();
+    switch (taskStatus.getState()) {
+      case TASK_RUNNING:
+        runningInstances.incrementAndGet();
+        break;
+      case TASK_FAILED:
+      case TASK_FINISHED:
+        runningInstances.decrementAndGet();
+        break;
     }
 
     logger.info("Number of running instances: {}", runningInstances.get());
