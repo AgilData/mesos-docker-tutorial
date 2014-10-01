@@ -39,10 +39,10 @@ public class ExampleScheduler implements Scheduler {
   /** Number of instances to run. */
   private final int desiredInstances;
 
-  /** Number of instances pending . */
+  /** List of pending instances. */
   private final List<String> pendingInstances = new ArrayList<>();
 
-  /** Number of instances running. */
+  /** List of running instances. */
   private final List<String> runningInstances = new ArrayList<>();
 
   /** Task ID generator. */
