@@ -39,8 +39,11 @@ public class ExampleScheduler implements Scheduler {
   /** Number of instances to run. */
   private final int desiredInstances;
 
+  /** Number of instances pending . */
+  private final List<String> pendingInstances = new ArrayList<>();
+
   /** Number of instances running. */
-  private final AtomicInteger runningInstances = new AtomicInteger();
+  private final List<String> runningInstances = new ArrayList<>();
 
   /** Task ID generator. */
   private final AtomicInteger taskIDGenerator = new AtomicInteger();
@@ -68,14 +71,15 @@ public class ExampleScheduler implements Scheduler {
 
     for (Protos.Offer offer : offers) {
 
-      List<Protos.TaskInfo> tasks = new ArrayList<Protos.TaskInfo>();
-      if (runningInstances.get() < desiredInstances) {
+      List<Protos.TaskInfo> tasks = new ArrayList<>();
+      if (runningInstances.size() + pendingInstances.size() < desiredInstances) {
 
         // generate a unique task ID
         Protos.TaskID taskId = Protos.TaskID.newBuilder()
             .setValue(Integer.toString(taskIDGenerator.incrementAndGet())).build();
 
         logger.info("Launching task {}", taskId.getValue());
+        pendingInstances.add(taskId.getValue());
 
         // docker image info
         Protos.ContainerInfo.DockerInfo.Builder dockerInfoBuilder = Protos.ContainerInfo.DockerInfo.newBuilder();
@@ -118,20 +122,25 @@ public class ExampleScheduler implements Scheduler {
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus taskStatus) {
 
+    final String taskId = taskStatus.getTaskId().getValue();
+
     logger.info("statusUpdate() task {} is in state {}",
-        taskStatus.getTaskId().getValue(), taskStatus.getState());
+        taskId, taskStatus.getState());
 
     switch (taskStatus.getState()) {
       case TASK_RUNNING:
-        runningInstances.incrementAndGet();
+        pendingInstances.remove(taskId);
+        runningInstances.add(taskId);
         break;
       case TASK_FAILED:
       case TASK_FINISHED:
-        runningInstances.decrementAndGet();
+        pendingInstances.remove(taskId);
+        runningInstances.remove(taskId);
         break;
     }
 
-    logger.info("Number of running instances: {}", runningInstances.get());
+    logger.info("Number of instances: pending={}, running={}",
+        pendingInstances.size(), runningInstances.size());
   }
 
   @Override
